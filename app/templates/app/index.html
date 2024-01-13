@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>homepage</title>
+</head>
+<body>
+    <h1>this is homepage</h1>
+
+
+
+
+    <script>
+
+        const ws = new WebSocket('ws://localhost:8000/ws/sc/')
+
+        ws.onopen = function(event){
+            console.log("websocket connection is open...")
+            ws.send("message from client.")
+        }
+
+        ws.onmessage = function(event){
+            console.log("Data is received by client...", event.data)
+        }
+
+        ws.onclose = function(event){
+            console.log("websocket connection is closed...")
+        }
+    </script>
+
+
+</body>
+</html>
