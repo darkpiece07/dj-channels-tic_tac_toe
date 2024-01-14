@@ -310,6 +310,7 @@
         var room_code = '{{room_code}}'
         var username = '{{username}}'
         var player = username.charAt(0)
+        var move = -1;
 
         let socket = new WebSocket('ws://localhost:8000/ws/game/' +room_code)
 
@@ -319,9 +320,44 @@
 
         elementArray.forEach(function(elem){
             elem.addEventListener("click" , function (event){
-                setText(event.originalTarget.dataset.cellIndex , player)
+                if(move == -1 || move != player) {
+                    const index = event.originalTarget.dataset.cellIndex
+                    setText(parseInt(index) , player, move)
+                } else {
+                    alert("please wait for your turn!")
+                }
             })
         })
+
+        
+        function setText(index , value, move){
+            var data = {
+                'move' : player,
+                'player' : player,
+                'index' : index,
+                'type' : 'running'
+            }
+
+            if(gameState[index] == ""){
+                gameState[index] = value
+                elementArray[index].innerHTML = value
+                
+                socket.send(JSON.stringify({
+                    data
+                }))
+                checkWon(value , player )
+            }else{
+                alert("You cannot fill this space")
+            }
+        }
+
+
+        function setAnotherUserText(index , value){
+            gameState[parseInt(index)] = value
+            elementArray[parseInt(index)].innerHTML = value
+        }
+
+
 
 
         function checkGameEnd(){
@@ -376,35 +412,6 @@
 
 
 
-        function setText(index , value){
-            var data = {
-                'player' : player,
-                'index' : index,
-                'type' : 'running'
-            }
-
-            
-
-            if(gameState[parseInt(index)] == ""){
-            gameState[parseInt(index)] = value
-            elementArray[parseInt(index)].innerHTML = value
-            
-            socket.send(JSON.stringify({
-                data
-            }))
-            checkWon(value , player )
-            }else{
-                alert("You cannot fill this space")
-            }
-        }
-
-
-        function setAnotherUserText(index , value){
-            gameState[parseInt(index)] = value
-            elementArray[parseInt(index)].innerHTML = value
-        }
-
-
 
         socket.onopen = function (e){
             console.log('Socket connected')
@@ -412,7 +419,8 @@
 
         socket.onmessage = function (e){
             var data = JSON.parse(e.data)
-            console.log(data)
+            move = data.payload.move
+
             if(data.payload.type == 'end' && data.payload.player !== player){
                 swal("Sorry!" , "You lost" , "error")
             }else if(data.payload.type == 'over'){
@@ -421,9 +429,6 @@
             }else if(data.payload.type == 'running' &&  data.payload.player !== player){
                 setAnotherUserText(data.payload.index , data.payload.player)
             }
-
-        
-
         }
 
         socket.onclose = function (e){
